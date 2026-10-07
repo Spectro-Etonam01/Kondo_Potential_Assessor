@@ -189,7 +189,7 @@ kbd{font:600 11px ui-monospace,Menlo,monospace;padding:2px 7px;border-radius:6px
 <div id="drawer" class="drawer hidden" onclick="if(event.target===this)closeDrawer()"><div class="dpanel"><div class="dhead"><h2 id="drawerTitle">Détail</h2><button class="chip" onclick="closeDrawer()">✕</button></div><div id="drawerBody"></div></div></div>
 <div id="toast" class="toast hidden"></div>
 <script>
-const KEY="kondo_potential_v2", THEME="kondo_potential_theme";
+const KEY="kondo_potential_v1", THEME="kondo_potential_theme";
 const dimensions=[
  {id:"values",name:"Valeurs",ico:"🧭",desc:"Ce qui oriente réellement vos choix."},
  {id:"skills",name:"Compétences",ico:"🛠️",desc:"Ce que vous savez effectivement faire."},
@@ -201,10 +201,9 @@ const dimensions=[
  {id:"leadership",name:"Leadership",ico:"👑",desc:"Votre capacité à influencer, décider et mobiliser."},
  {id:"conversion",name:"Conversion",ico:"💎",desc:"Votre capacité à transformer vos capacités en résultats utiles."}
 ];
-const AG=["Pas du tout","Plutôt non","Parfois","Plutôt oui","Tout à fait"];
 const questions=[
 {id:"v1",dim:"values",type:"single",q:"Quand deux priorités importantes s'opposent, lequel compte le plus pour vous ?",opts:["Liberté et autonomie","Sécurité et stabilité","Réussite et progression","Relations et loyauté","Influence et impact"]},
-{id:"v2",dim:"values",type:"single",q:"Si un choix rentable entre en conflit avec votre intégrité, que faites-vous le plus probablement ?",opts:["Je refuse","Je cherche une troisième solution","Je négocie les conditions","J'accepte si le risque est faible","La rentabilité passe d'abord"],key:[5,4,3,2,1]},
+{id:"v2",dim:"values",type:"single",q:"Si un choix rentable entre en conflit avec votre intégrité, que faites-vous le plus probablement ?",opts:["Je refuse","Je cherche une troisième solution","Je négocie les conditions","J'accepte si le risque est faible","La rentabilité passe d'abord"]},
 {id:"v3",dim:"values",type:"scale",q:"J'accepte de renoncer à un avantage immédiat pour rester fidèle à mes principes.",labels:["Pas du tout","Rarement","Parfois","Souvent","Tout à fait"]},
 {id:"s1",dim:"skills",type:"scale",q:"Je peux expliquer clairement à quelqu'un comment réaliser une tâche que je maîtrise.",labels:["Très faible","Faible","Moyen","Fort","Très fort"]},
 {id:"s2",dim:"skills",type:"scale",q:"Je sais résoudre un problème pratique même lorsque les informations disponibles sont incomplètes.",labels:["Très faible","Faible","Moyen","Fort","Très fort"]},
@@ -225,63 +224,19 @@ const questions=[
 {id:"c1",dim:"conversion",type:"scale",q:"Je transforme régulièrement mes connaissances ou compétences en résultats concrets.",labels:["Jamais","Rarement","Parfois","Souvent","Presque toujours"]},
 {id:"c2",dim:"conversion",type:"scale",q:"Je sais identifier comment une compétence peut être utile, vendue ou valorisée.",labels:["Très faible","Faible","Moyen","Fort","Très fort"]},
 {id:"c3",dim:"conversion",type:"scale",q:"Je passe rapidement de l'idée à une première action concrète.",labels:["Très difficile","Difficile","Variable","Facile","Très facile"]},
-{id:"c4",dim:"conversion",type:"scale",q:"Je sais me concentrer sur quelques priorités plutôt que de me disperser.",labels:["Jamais","Rarement","Parfois","Souvent","Presque toujours"]},
-/* Items inversés (contrôle de cohérence) */
-{id:"d1r",dim:"discipline",type:"scale",rev:true,q:"Je commence souvent plusieurs choses sans en terminer certaines.",labels:AG},
-{id:"d2r",dim:"discipline",type:"scale",rev:true,q:"Lorsque l'enthousiasme initial disparaît, j'abandonne facilement.",labels:AG},
-{id:"l1r",dim:"learning",type:"scale",rev:true,q:"Face à un sujet nouveau, je mets beaucoup de temps à comprendre.",labels:AG},
-{id:"l2r",dim:"learning",type:"scale",rev:true,q:"Je préfère retenir des méthodes toutes faites plutôt que comprendre leur logique.",labels:AG},
-{id:"ad1r",dim:"adaptability",type:"scale",rev:true,q:"Quand mes plans changent, je reste bloqué un long moment avant de repartir.",labels:AG},
-{id:"r1r",dim:"resilience",type:"scale",rev:true,q:"Un échec important me décourage durablement.",labels:AG},
-{id:"ld1r",dim:"leadership",type:"scale",rev:true,q:"J'attends généralement que quelqu'un d'autre prenne les décisions difficiles.",labels:AG},
-{id:"c3r",dim:"conversion",type:"scale",rev:true,q:"J'ai souvent de bonnes idées que je ne mets jamais en œuvre.",labels:AG},
-{id:"c4r",dim:"conversion",type:"scale",rev:true,q:"Je me disperse entre trop de projets à la fois.",labels:AG},
-{id:"s2r",dim:"skills",type:"scale",rev:true,q:"Sans informations complètes, je suis incapable d'avancer.",labels:AG},
-{id:"a3r",dim:"abilities",type:"scale",rev:true,q:"J'ai besoin qu'on me guide régulièrement pour avancer.",labels:AG},
-{id:"v3r",dim:"values",type:"scale",rev:true,q:"Je fais parfois des compromis sur mes principes quand l'enjeu est important.",labels:AG},
-/* Mises en situation (réponse la plus « évidente » volontairement non triviale) */
-{id:"sit1",dim:"discipline",type:"single",w:1.5,q:"Un projet important est à rendre dans 10 jours, quand une opportunité nouvelle et séduisante apparaît. Que faites-vous ?",opts:["J'abandonne le projet pour saisir l'opportunité","Je mène les deux de front, quitte à finir dans l'urgence","Je note l'opportunité, termine le projet, puis je l'étudie","Je demande un délai sur le projet pour traiter l'opportunité","J'attends de voir comment les choses évoluent"],key:[1,2,5,3,2]},
-{id:"sit2",dim:"conversion",type:"single",w:1.5,q:"Vous maîtrisez une compétence que personne autour de vous ne valorise financièrement. Vous…",opts:["Attendez qu'on reconnaisse votre valeur","Testez une offre simple auprès de 3 personnes cette semaine","Vous formez davantage avant de proposer quoi que ce soit","La partagez gratuitement pour vous faire connaître","En parlez autour de vous sans plan précis"],key:[1,5,2,3,2]},
-{id:"sit3",dim:"resilience",type:"single",w:1.5,q:"Une personne importante critique durement un travail dont vous étiez fier. Votre réaction la plus probable ?",opts:["Je me défends et justifie mon travail","Je laisse passer quelques jours puis j'extrais ce qui est utile","Je doute de moi et je repousse mes projets","Je rejette la critique comme injuste","Je corrige tout immédiatement, sans analyser"],key:[2,5,1,1,3]},
-{id:"sit4",dim:"adaptability",type:"single",w:1.5,q:"Votre environnement change brutalement et votre méthode habituelle ne fonctionne plus. Vous…",opts:["Persistez : ça finira par repasser","Testez rapidement 2 ou 3 approches alternatives à petite échelle","Attendez des instructions ou un signal clair","Changez complètement de domaine","Cherchez d'abord ce qui a changé, puis adaptez votre méthode"],key:[1,5,2,2,4]},
-{id:"sit5",dim:"leadership",type:"single",w:1.5,q:"Une équipe est bloquée par un désaccord et personne ne tranche. Vous…",opts:["Laissez le temps faire","Imposez votre solution","Reformulez les positions, proposez un critère de décision et faites trancher","Vous retirez pour éviter le conflit","Faites remonter au supérieur sans proposition"],key:[1,2,5,1,2]},
-{id:"sit6",dim:"learning",type:"single",w:1.5,q:"Vous devez maîtriser un sujet nouveau en deux semaines. Vous…",opts:["Lisez tout avant de pratiquer","Pratiquez tôt sur un cas réel et ajustez en lisant","Cherchez quelqu'un qui le fera à votre place","Regardez quelques vidéos","Suivez un cours structuré, puis pratiquez"],key:[2,5,1,2,4]},
-/* Comportements passés (plus difficiles à embellir) */
-{id:"b1",dim:"discipline",type:"scale",beh:true,w:1.5,q:"Au cours des 6 derniers mois, combien de projets importants avez-vous menés jusqu'au bout ?",labels:["Aucun","Un seul","Deux","Trois à quatre","Cinq ou plus"]},
-{id:"b2",dim:"conversion",type:"scale",beh:true,w:1.5,q:"Au cours des 6 derniers mois, combien de fois avez-vous transformé une idée en action concrète (test, offre, prototype) ?",labels:["Jamais","1 fois","2 à 3 fois","4 à 6 fois","Plus de 6 fois"]},
-{id:"b3",dim:"learning",type:"scale",beh:true,w:1.5,q:"Au cours des 6 derniers mois, avez-vous appris et appliqué une nouvelle compétence ?",labels:["Non","Commencé sans appliquer","Une, partiellement","Une, appliquée","Plusieurs, appliquées"]},
-{id:"b4",dim:"resilience",type:"scale",beh:true,w:1.5,q:"Après votre dernier revers important, combien de temps avant de repartir concrètement ?",labels:["Pas encore / +6 mois","3 à 6 mois","1 à 3 mois","Quelques semaines","Quelques jours"]},
-{id:"b5",dim:"leadership",type:"scale",beh:true,w:1.5,q:"Au cours des 6 derniers mois, combien de fois avez-vous pris l'initiative d'une décision ou d'une action collective ?",labels:["Jamais","1 fois","2 à 3 fois","4 à 6 fois","Plus de 6 fois"]},
-/* Échelle de désirabilité sociale (non comptée dans les dimensions) */
-{id:"sd1",dim:"valid",type:"scale",q:"Je ne perds jamais patience, quelle que soit la situation.",labels:AG},
-{id:"sd2",dim:"valid",type:"scale",q:"Je n'ai jamais remis à plus tard une tâche importante.",labels:AG},
-{id:"sd3",dim:"valid",type:"scale",q:"Je ne me suis jamais trompé dans un jugement important.",labels:AG},
-{id:"sd4",dim:"valid",type:"scale",q:"Je tiens toujours mes promesses, sans la moindre exception.",labels:AG}
+{id:"c4",dim:"conversion",type:"scale",q:"Je sais me concentrer sur quelques priorités plutôt que de me disperser.",labels:["Jamais","Rarement","Parfois","Souvent","Presque toujours"]}
 ];
-const PAIRS=[["d1","d1r"],["d2","d2r"],["l1","l1r"],["l2","l2r"],["ad1","ad1r"],["r1","r1r"],["ld1","ld1r"],["c3","c3r"],["c4","c4r"],["s2","s2r"],["a3","a3r"],["v3","v3r"]];
 
-function partnerOf(id){const p=PAIRS.find(x=>x.includes(id));return p?(p[0]===id?p[1]:p[0]):null}
-function makeOrder(){
-  const idx=questions.map((_,i)=>i);
-  const adj=()=>{for(let k=1;k<idx.length;k++){if(partnerOf(questions[idx[k-1]].id)===questions[idx[k]].id)return true}return false};
-  let t=0;do{for(let i=idx.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[idx[i],idx[j]]=[idx[j],idx[i]]}}while(adj()&&++t<80);
-  return idx;
-}
-function fresh(profile="general",screen="home"){return{screen,i:0,answers:{},profile,result:null,order:makeOrder(),confirmed:{},times:{}}}
-let state=fresh();
-let advanceTimer=null,shownAt=0;
-function cq(){return questions[state.order[state.i]]}
-function pairGapFor(id){const p=PAIRS.find(x=>x.includes(id));if(!p)return null;const A=state.answers;if(A[p[0]]==null||A[p[1]]==null)return null;return Math.abs(A[p[0]]-(6-A[p[1]]))}
-function confirmPair(id){state.confirmed[id]=true;const p=partnerOf(id);if(p)state.confirmed[p]=true;next()}
-function gotoQ(id){clearTimeout(advanceTimer);const ix=questions.findIndex(q=>q.id===id);state.i=state.order.indexOf(ix);render()}
+let state={screen:"home",i:0,answers:{},profile:"general",result:null};
+let advanceTimer=null;
 
 /* ---------- Utilitaires ---------- */
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state));toast("Progression sauvegardée ✓")}catch(e){toast("Sauvegarde indisponible")}}
-function load(){try{const x=JSON.parse(localStorage.getItem(KEY));if(x&&x.answers){state=x;if(!state.order||state.order.length!==questions.length)state.order=makeOrder();state.confirmed=state.confirmed||{};state.times=state.times||{}}}catch(e){}}
+function load(){try{const x=JSON.parse(localStorage.getItem(KEY));if(x&&x.answers)state=x}catch(e){}}
 function toast(s){const t=document.getElementById("toast");t.textContent=s;t.classList.remove("hidden");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.add("hidden"),1900)}
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function answeredCount(){return Object.keys(state.answers).length}
-function dimOf(id){return dimensions.find(d=>d.id===id)||{id:"valid",name:"Profil général",ico:"🧩",desc:"Votre façon de vous percevoir au quotidien."}}
+function dimOf(id){return dimensions.find(d=>d.id===id)}
 function level(n){return n>=80?"Très élevé":n>=70?"Élevé":n>=55?"Modéré":"À développer"}
 function applyTheme(t){document.documentElement.setAttribute("data-theme",t);try{localStorage.setItem(THEME,t)}catch(e){}}
 function toggleTheme(){applyTheme(document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark");if(state.screen==="results")render()}
@@ -310,7 +265,7 @@ function home(){
   <div class="principle"><b>Principe KONDO</b> — Le potentiel n'est pas seulement ce que vous possédez. Il dépend aussi de votre capacité à l'utiliser, de votre environnement et de votre positionnement.</div>
   </section>`;
 }
-function start(profile){state=fresh(profile,"test");render()}
+function start(profile){state={screen:"test",i:0,answers:{},profile,result:null};render()}
 function resume(){state.screen="test";state.i=Math.min(state.i,questions.length-1);render()}
 
 function choicesHTML(q){
@@ -319,73 +274,40 @@ function choicesHTML(q){
 }
 function sideHTML(){
   return `<h3>VOTRE PARCOURS</h3><div class="steps">${dimensions.map(d=>{
-    const qs=questions.filter(q=>q.dim===d.id),n=qs.filter(q=>state.answers[q.id]!=null).length,cur=cq().dim===d.id;
+    const qs=questions.filter(q=>q.dim===d.id),n=qs.filter(q=>state.answers[q.id]!=null).length,cur=questions[state.i].dim===d.id;
     return `<div class="stp ${cur?"current":""} ${n===qs.length?"done":""}"><div class="si">${d.ico}</div><div><b>${esc(d.name)}</b><small>${n}/${qs.length} répondue${qs.length>1?"s":""}</small></div></div>`}).join("")}</div>`;
 }
 function test(){
-  shownAt=Date.now();const q=cq(),d=dimOf(q.dim),pct=Math.round(answeredCount()/questions.length*100),last=state.i===questions.length-1;
+  const q=questions[state.i],d=dimOf(q.dim),pct=Math.round(answeredCount()/questions.length*100),last=state.i===questions.length-1;
   return `<div class="progress enter"><div class="bar"><i id="pbar" style="width:${pct}%"></i></div><div class="steptext">${state.i+1} / ${questions.length}</div></div>
   <div class="grid"><section class="glass enter" id="qcard">
     <div class="qhead"><div class="dimico">${d.ico}</div><div class="eyebrow">${esc(d.name)}</div></div>
     <h1 class="q">${esc(q.q)}</h1><p class="qdesc">${esc(d.desc)}</p>
-    <div id="choices">${choicesHTML(q)}</div><div id="notice"></div>
+    <div id="choices">${choicesHTML(q)}</div>
     <div class="hint"><span><kbd>${q.type==="single"?"A–E":"1–5"}</kbd> répondre</span><span><kbd>←</kbd> retour</span><span><kbd>Entrée</kbd> continuer</span></div>
     <div class="actions"><button class="btn ghost" onclick="prev()" ${state.i===0?"disabled":""}>← Retour</button><button class="btn primary" id="nextBtn" onclick="next()" ${state.answers[q.id]==null?"disabled":""}>${last?"Voir mon profil ✨":"Continuer →"}</button></div>
   </section><aside class="glass side enter" id="side">${sideHTML()}</aside></div>`;
 }
 function answer(v){
-  const q=cq();state.answers[q.id]=v;state.times[q.id]=Math.min(60000,Date.now()-shownAt);
+  const q=questions[state.i];state.answers[q.id]=v;
   document.getElementById("choices").innerHTML=choicesHTML(q);
   document.getElementById("nextBtn").disabled=false;
   document.getElementById("side").innerHTML=sideHTML();
   document.getElementById("pbar").style.width=Math.round(answeredCount()/questions.length*100)+"%";
   clearTimeout(advanceTimer);
-  const nt=document.getElementById("notice"),pg=pairGapFor(q.id);
-  if(pg!=null&&pg>=3&&!state.confirmed[q.id]){
-    nt.innerHTML=`<div class="alert">⚠️ Cette réponse semble s'opposer à celle d'une autre question. Souhaitez-vous la confirmer, ou revoir l'autre réponse ?<div class="alert-actions"><button class="btn ghost" onclick="confirmPair('${q.id}')">Je confirme</button><button class="btn ghost" onclick="gotoQ('${partnerOf(q.id)}')">Revoir l'autre question</button></div></div>`;
-    return;
-  }
-  nt.innerHTML="";
-  if(state.i<questions.length-1)advanceTimer=setTimeout(()=>{if(state.screen==="test"&&cq().id===q.id)next()},520);
+  if(state.i<questions.length-1)advanceTimer=setTimeout(()=>{if(state.screen==="test"&&questions[state.i].id===q.id)next()},520);
 }
 function prev(){clearTimeout(advanceTimer);if(state.i>0){state.i--;render()}}
 function next(){clearTimeout(advanceTimer);if(state.answers[questions[state.i].id]==null)return;if(state.i<questions.length-1){state.i++;render()}else{calculate();state.screen="results";render()}}
 
 /* ---------- Moteur (inchangé) ---------- */
-function itemVal(q){const v=state.answers[q.id];if(v==null)return null;if(q.type==="single")return q.key?q.key[v]:null;return q.rev?6-v:v}
-function calcDim(id){let sw=0,s=0;questions.filter(q=>q.dim===id).forEach(q=>{const v=itemVal(q);if(v==null)return;const w=q.w||1;sw+=w;s+=w*v});return sw?Math.round(s/sw/5*100):0}
-/* KRVI — KONDO Response Validity Index */
-function validity(){
-  const A=state.answers,mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
-  let n=0,flag=0;
-  PAIRS.forEach(([d,r])=>{if(A[d]==null||A[r]==null)return;n++;if(Math.abs(A[d]-(6-A[r]))>=3)flag+=state.confirmed[d]?.5:1});
-  const incons=n?flag/n:0;
-  const sd=questions.filter(q=>q.dim==="valid").map(q=>A[q.id]).filter(v=>v!=null);
-  const sdMean=mean(sd)??3,sdRisk=Math.max(0,Math.min(1,(sdMean-3)/1.8));
-  const raw=questions.filter(q=>q.type==="scale").map(q=>A[q.id]).filter(v=>v!=null);
-  const eri=raw.length?raw.filter(v=>v===1||v===5).length/raw.length:0,acq=mean(raw)??3;
-  let run=1,best=1,prev=null;
-  state.order.forEach(ix=>{const q=questions[ix];if(q.type!=="scale"){prev=null;run=1;return}const v=A[q.id];if(v==null)return;if(v===prev){run++;best=Math.max(best,run)}else{run=1;prev=v}});
-  const ts=Object.values(state.times).sort((a,b)=>a-b),med=ts.length?ts[Math.floor(ts.length/2)]/1000:5;
-  const selfV=[],behV=[];
-  questions.forEach(q=>{if(q.dim==="valid")return;const v=itemVal(q);if(v==null)return;(q.type==="single"||q.beh?behV:selfV).push(v)});
-  const selfM=mean(selfV),behM=mean(behV),gapSB=selfM!=null&&behM!=null?Math.round((selfM-behM)/5*100):0;
-  const pen={cons:35*Math.min(1,incons*1.6),sd:25*sdRisk,eri:eri>.65?Math.min(10,(eri-.65)*40):0,acq:acq>4.2?Math.min(10,(acq-4.2)*20):0,run:best>=6?Math.min(15,(best-5)*3):0,speed:med<1.2?15:med<2?8:0,sb:gapSB>20?Math.min(10,(gapSB-20)*.5):0};
-  const krvi=Math.round(Math.max(0,Math.min(100,100-Object.values(pen).reduce((a,b)=>a+b,0))));
-  return{krvi,n,flag,incons,sdMean,sdRisk,eri,acq,run:best,med,gapSB,pen,selfM,behM};
-}
-function lambdaOf(v){return Math.min(.5,Math.max(0,(100-v.krvi)/100*.6)+Math.max(0,Math.min(.15,(v.gapSB-10)/100)))}
+function calcDim(id){const qs=questions.filter(q=>q.dim===id),vals=qs.map(q=>{let v=state.answers[q.id];if(v==null)return null;if(q.type==="single")return 3;return v}).filter(v=>v!=null);if(!vals.length)return 0;return Math.round(vals.reduce((a,b)=>a+b,0)/vals.length/5*100)}
 function calculate(){
-  const rawScores={};dimensions.forEach(d=>rawScores[d.id]=calcDim(d.id));
-  const validityR=validity(),lam=lambdaOf(validityR),anchor=validityR.behM!=null?validityR.behM/5*100:50;
-  /* correction : on ne ramène vers les comportements observés que les scores déclarés plus flatteurs */
-  const scores={};dimensions.forEach(d=>{const x=rawScores[d.id];scores[d.id]=x>anchor?Math.round(x*(1-lam)+anchor*lam):x});
+  const scores={};dimensions.forEach(d=>scores[d.id]=calcDim(d.id));
   const potential=Math.round(scores.skills*.24+scores.abilities*.24+scores.learning*.14+scores.adaptability*.1+scores.resilience*.08+scores.leadership*.08+scores.discipline*.07+scores.values*.05);
   const conversion=scores.conversion,latent=Math.max(0,potential-conversion);
-  const rs=rawScores,rawPotential=Math.round(rs.skills*.24+rs.abilities*.24+rs.learning*.14+rs.adaptability*.1+rs.resilience*.08+rs.leadership*.08+rs.discipline*.07+rs.values*.05);
-  const confidence=validityR.krvi;
-  const margin=Math.round(3+(100-validityR.krvi)*.14+(questions.length-answeredCount())*.3);
-  state.result={scores,rawScores,potential,rawPotential,conversion,latent,confidence,validity:validityR,lambda:lam,margin,lo:Math.max(0,potential-margin),hi:Math.min(100,potential+margin),date:new Date().toISOString()};
+  const confidence=Math.round(Math.min(100,65+answeredCount()/questions.length*35));
+  state.result={scores,potential,conversion,latent,confidence,date:new Date().toISOString()};
 }
 function calculateLists(r){
   const s=r.scores,names=Object.fromEntries(dimensions.map(d=>[d.id,d.name]));
@@ -449,15 +371,13 @@ function results(){
       <div class="eyebrow">VOTRE PROFIL</div>
       <h1 class="rtitle gradtext">${profileName}</h1>
       <p class="muted" style="line-height:1.65;margin:0">Potentiel global <b style="color:var(--text)">${level(r.potential)}</b>. Vos trois dimensions les plus fortes : ${top3.map(d=>`<b style="color:var(--text)">${d.ico} ${d.name}</b>`).join(", ")}.</p>
-      <div class="badges"><span class="badge exp">KPS expérimental corrigé</span><span class="badge">Fiabilité KRVI : ${r.confidence}/100</span><span class="badge">Intervalle : ${r.lo}–${r.hi}</span></div>
-      <button class="btn ghost" onclick="openDrawer('Comment le score est-il calculé ?','<p style=&quot;line-height:1.7&quot;>Le score global (KPS expérimental) combine les neuf dimensions avec des pondérations provisoires, non encore calibrées sur des données. Le résultat est corrigé à la baisse lorsque les réponses semblent flatteuses ou contradictoires (indice KRVI) et rapproché de vos comportements déclarés. Il sert à comparer les dimensions d’un même profil et à suivre son évolution. Ce n’est ni un diagnostic psychologique, ni une mesure universelle de la valeur d’une personne.</p>')">Pourquoi ce score ?</button>
+      <div class="badges"><span class="badge exp">KPS expérimental</span><span class="badge">Complétude des réponses : ${r.confidence} %</span></div>
+      <button class="btn ghost" onclick="openDrawer('Comment le score est-il calculé ?','<p style=&quot;line-height:1.7&quot;>Le score global (KPS expérimental) combine les neuf dimensions avec des pondérations provisoires, non encore calibrées sur des données. Il sert à comparer les dimensions d’un même profil et à suivre son évolution. Ce n’est ni un diagnostic psychologique, ni une mesure universelle de la valeur d’une personne.</p>')">Pourquoi ce score ?</button>
     </div>
     <div class="herotop" style="justify-content:center">
       <div class="ringwrap">${ringSVG(r.potential)}<div class="num"><div><b id="kps">0</b><small>KPS / 100</small></div></div></div>
     </div>
   </div></section>
-
-  ${reliabilityHTML(r)}
 
   <section class="glass"><div class="sec"><h2>Radar des 9 dimensions</h2><span class="tag">vue d'ensemble</span></div><div class="radarbox">${radarSVG(s)}</div></section>
 
@@ -506,7 +426,7 @@ document.getElementById("resetBtn").onclick=()=>{if(confirm("Effacer toute la pr
 document.addEventListener("keydown",e=>{
   if(e.key==="Escape")closeDrawer();
   if(state.screen!=="test"||!document.getElementById("drawer").classList.contains("hidden"))return;
-  const q=cq();
+  const q=questions[state.i];
   if(q.type==="scale"&&/^[1-5]$/.test(e.key))answer(+e.key);
   else if(q.type==="single"&&/^[a-eA-E]$/.test(e.key))answer(e.key.toUpperCase().charCodeAt(0)-65);
   else if(e.key==="Enter")next();
@@ -519,3 +439,4 @@ render();
 </script>
 </body>
 </html>
+
