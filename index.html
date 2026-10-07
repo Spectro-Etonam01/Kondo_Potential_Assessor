@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>KONDO Potential Assessor</title>
+<meta name="theme-color" content="#0b1020">
+<style>
+:root{
+  --bg:#070b17;--bg2:#0d1326;--surface:rgba(255,255,255,.055);--surface2:rgba(255,255,255,.09);--line:rgba(255,255,255,.11);
+  --text:#eef2ff;--muted:#9aa6c4;--accent:#6ea8ff;--accent2:#a78bfa;--accent3:#34d3b6;--gold:#f5c76b;
+  --good:#34d3b6;--warn:#f5c76b;--bad:#ff7a8a;--shadow:0 30px 80px -30px rgba(0,0,0,.7);--r:22px;
+  --grad:linear-gradient(135deg,#6ea8ff 0%,#a78bfa 55%,#f58bd3 100%);--ring-track:rgba(255,255,255,.09);--glass-blur:blur(18px);
+}
+[data-theme="light"]{
+  --bg:#f3f5fb;--bg2:#e9edf8;--surface:rgba(255,255,255,.78);--surface2:rgba(255,255,255,.95);--line:rgba(20,30,70,.1);
+  --text:#101733;--muted:#5c6788;--accent:#3a6df0;--accent2:#7c5cf0;--accent3:#0fa98f;--gold:#c8901a;
+  --good:#0fa98f;--warn:#c8901a;--bad:#d9455a;--shadow:0 24px 60px -28px rgba(30,45,100,.28);
+  --grad:linear-gradient(135deg,#3a6df0 0%,#7c5cf0 60%,#d046a8 100%);--ring-track:rgba(20,30,70,.08);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;min-height:100vh;color:var(--text);background:var(--bg);font-family:Inter,"SF Pro Display",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+/* Aurora background */
+.aurora{position:fixed;inset:0;z-index:-1;overflow:hidden;background:radial-gradient(120% 80% at 50% 0%,var(--bg2),var(--bg))}
+.aurora i{position:absolute;border-radius:50%;filter:blur(90px);opacity:.38;animation:float 22s ease-in-out infinite}
+.aurora i:nth-child(1){width:520px;height:520px;background:#4f7dff;top:-160px;left:-120px}
+.aurora i:nth-child(2){width:460px;height:460px;background:#a855f7;top:25%;right:-140px;animation-delay:-7s}
+.aurora i:nth-child(3){width:420px;height:420px;background:#14b8a6;bottom:-160px;left:25%;animation-delay:-13s;opacity:.26}
+[data-theme="light"] .aurora i{opacity:.22}
+.aurora:after{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.06) 1px,transparent 1px);background-size:26px 26px;mask-image:radial-gradient(70% 60% at 50% 30%,#000,transparent)}
+@keyframes float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(50px,40px) scale(1.08)}66%{transform:translate(-40px,60px) scale(.94)}}
+/* Header */
+.top{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:14px clamp(14px,3vw,32px);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);background:linear-gradient(var(--bg),transparent);border-bottom:1px solid transparent}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:38px;height:38px;border-radius:12px;background:var(--grad);display:grid;place-items:center;font-weight:900;color:#fff;box-shadow:0 8px 24px -6px rgba(124,92,240,.7)}
+.brand b{letter-spacing:2px;font-size:13px;display:block}.brand small{color:var(--muted);font-size:10px;letter-spacing:3px;font-weight:600}
+.tools{display:flex;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:9px 13px;border-radius:12px;background:var(--surface);border:1px solid var(--line);font-size:13px;font-weight:600;transition:.2s;backdrop-filter:var(--glass-blur)}
+.chip:hover{background:var(--surface2);transform:translateY(-1px)}
+.wrap{max-width:1180px;margin:0 auto;padding:10px clamp(14px,3vw,32px) 90px}
+.glass{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);padding:clamp(20px,3vw,34px);position:relative;overflow:hidden}
+.eyebrow{text-transform:uppercase;letter-spacing:.2em;font-size:11px;font-weight:800;color:var(--accent)}
+.gradtext{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.muted{color:var(--muted)}
+.hidden{display:none!important}
+.enter{animation:rise .55s cubic-bezier(.2,.8,.2,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.stagger>*{animation:rise .6s cubic-bezier(.2,.8,.2,1) both}
+.stagger>*:nth-child(2){animation-delay:.08s}.stagger>*:nth-child(3){animation-delay:.16s}.stagger>*:nth-child(4){animation-delay:.24s}.stagger>*:nth-child(5){animation-delay:.32s}.stagger>*:nth-child(6){animation-delay:.4s}
+/* Home */
+.hero{padding:clamp(28px,6vw,64px) clamp(20px,5vw,60px);text-align:left}
+.hero h1{font-size:clamp(32px,5.6vw,60px);line-height:1.04;margin:14px 0 18px;letter-spacing:-.025em;font-weight:850;max-width:860px}
+.hero p{font-size:clamp(15px,1.7vw,18px);line-height:1.65;max-width:680px;color:var(--muted)}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin:22px 0 4px}
+.pill{padding:7px 12px;border-radius:99px;border:1px solid var(--line);background:var(--surface);font-size:12px;font-weight:600;color:var(--muted)}
+.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:30px}
+.mode{position:relative;text-align:left;padding:22px;border-radius:20px;background:var(--surface);border:1px solid var(--line);transition:.25s;overflow:hidden}
+.mode:before{content:"";position:absolute;inset:0;background:var(--grad);opacity:0;transition:.3s}
+.mode:hover{transform:translateY(-4px);border-color:rgba(167,139,250,.6);box-shadow:0 20px 50px -20px rgba(124,92,240,.55)}
+.mode:hover:before{opacity:.1}
+.mode>*{position:relative}
+.mode .ico{font-size:26px;display:block;margin-bottom:12px}
+.mode b{font-size:16px;display:block;margin-bottom:5px}.mode span.d{font-size:13px;color:var(--muted);line-height:1.5}
+.mode .rec{position:absolute;top:14px;right:14px;font-size:10px;font-weight:800;letter-spacing:.1em;padding:4px 8px;border-radius:99px;background:var(--grad);color:#fff}
+.principle{margin-top:22px;padding:18px 20px;border-radius:16px;background:linear-gradient(135deg,rgba(110,168,255,.12),rgba(167,139,250,.12));border:1px solid var(--line);line-height:1.6;font-size:14px}
+.meta{display:flex;gap:22px;flex-wrap:wrap;margin-top:22px;color:var(--muted);font-size:13px}
+.meta b{color:var(--text)}
+/* Test */
+.progress{display:flex;align-items:center;gap:14px;margin:6px 0 18px}
+.bar{flex:1;height:8px;border-radius:99px;background:var(--ring-track);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px;background:var(--grad);transition:width .6s cubic-bezier(.2,.8,.2,1);box-shadow:0 0 18px rgba(167,139,250,.7)}
+.steptext{font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px}
+.qhead{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.dimico{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;font-size:20px;background:var(--surface2);border:1px solid var(--line)}
+.q{font-size:clamp(24px,3.4vw,36px);line-height:1.16;letter-spacing:-.02em;margin:14px 0 10px;font-weight:800}
+.qdesc{color:var(--muted);font-size:14px;line-height:1.6;margin:0 0 6px}
+.choices{display:grid;gap:10px;margin:26px 0 8px}
+.choice{display:flex;align-items:center;gap:14px;text-align:left;padding:16px 18px;border-radius:16px;background:var(--surface);border:1px solid var(--line);transition:.2s;font-size:15px}
+.choice:hover{border-color:rgba(167,139,250,.55);transform:translateX(4px);background:var(--surface2)}
+.choice .k{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;font-size:12px;font-weight:800;border:1px solid var(--line);color:var(--muted);flex:0 0 auto;transition:.2s}
+.choice.selected{border-color:var(--accent2);background:linear-gradient(135deg,rgba(110,168,255,.16),rgba(167,139,250,.16));box-shadow:0 10px 30px -14px rgba(124,92,240,.7)}
+.choice.selected .k{background:var(--grad);color:#fff;border-color:transparent}
+.scale{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:28px 0 8px}
+.sbtn{padding:20px 6px 14px;border-radius:18px;background:var(--surface);border:1px solid var(--line);transition:.22s;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}
+.sbtn strong{font-size:26px;font-weight:850;line-height:1;color:var(--muted);transition:.2s}
+.sbtn span{font-size:11px;color:var(--muted);line-height:1.25;min-height:28px}
+.sbtn:hover{transform:translateY(-4px);border-color:rgba(167,139,250,.55);background:var(--surface2)}
+.sbtn.selected{border-color:transparent;background:var(--grad);box-shadow:0 18px 40px -14px rgba(124,92,240,.8);transform:translateY(-4px) scale(1.03)}
+.sbtn.selected strong,.sbtn.selected span{color:#fff}
+.hint{font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:center;margin-top:14px}
+kbd{font:600 11px ui-monospace,Menlo,monospace;padding:2px 7px;border-radius:6px;background:var(--surface2);border:1px solid var(--line)}
+.actions{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:26px}
+.btn{padding:13px 22px;border-radius:14px;font-weight:700;font-size:14px;transition:.2s}
+.btn.primary{background:var(--grad);color:#fff;box-shadow:0 14px 34px -12px rgba(124,92,240,.8)}
+.btn.primary:hover{transform:translateY(-2px);filter:brightness(1.08)}
+.btn.primary:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+.btn.ghost{background:var(--surface);border:1px solid var(--line)}
+.btn.ghost:hover{background:var(--surface2)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.side h3{margin:0 0 14px;font-size:14px;letter-spacing:.05em}
+.steps{display:grid;gap:8px}
+.stp{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:14px;border:1px solid transparent;transition:.2s;font-size:13px}
+.stp .si{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:var(--surface);font-size:15px;position:relative}
+.stp small{display:block;color:var(--muted);font-size:11px}
+.stp.current{background:var(--surface2);border-color:var(--line)}
+.stp.current .si{background:var(--grad)}
+.stp.done .si:after{content:"✓";position:absolute;right:-5px;bottom:-5px;width:15px;height:15px;border-radius:50%;background:var(--good);color:#04201a;font-size:9px;font-weight:900;display:grid;place-items:center}
+/* Results */
+.results{display:grid;gap:18px}
+.rhero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:26px;align-items:center}
+.ringwrap{position:relative;width:min(230px,60vw);aspect-ratio:1}
+.ringwrap svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ringwrap .num{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.ringwrap .num b{font-size:clamp(48px,8vw,68px);font-weight:900;line-height:1;letter-spacing:-.03em}
+.ringwrap .num small{display:block;font-size:10px;letter-spacing:.18em;color:var(--muted);font-weight:700;margin-top:4px}
+.rtitle{font-size:clamp(26px,4vw,40px);line-height:1.08;margin:10px 0 12px;letter-spacing:-.02em;font-weight:850}
+.badges{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.badge{padding:7px 12px;border-radius:99px;font-size:12px;font-weight:700;border:1px solid var(--line);background:var(--surface)}
+.badge.exp{border-color:rgba(245,199,107,.5);color:var(--gold);background:rgba(245,199,107,.08)}
+.herotop{display:flex;gap:28px;align-items:center;flex-wrap:wrap}
+.radarbox{display:grid;place-items:center}
+.radarbox svg{width:100%;max-width:430px;height:auto;overflow:visible}
+.radar-poly{transform-origin:200px 200px;animation:grow 1.1s cubic-bezier(.2,.8,.2,1) both}
+@keyframes grow{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.sec{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:10px}
+.sec h2{margin:0;font-size:20px;letter-spacing:-.01em}
+.tag{padding:5px 10px;border-radius:99px;background:var(--surface2);border:1px solid var(--line);font-size:11px;font-weight:800;letter-spacing:.05em}
+.dgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.dcard{padding:16px;border-radius:18px;background:var(--surface);border:1px solid var(--line);transition:.22s;text-align:left;width:100%}
+.dcard:hover{transform:translateY(-3px);border-color:rgba(167,139,250,.5);background:var(--surface2)}
+.dtop{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.dtop .dimico{width:34px;height:34px;font-size:16px;border-radius:11px}
+.dtop b{font-size:14px;flex:1}.dtop em{font-style:normal;font-weight:850;font-size:20px;font-variant-numeric:tabular-nums}
+.meter{height:7px;border-radius:99px;background:var(--ring-track);overflow:hidden}
+.meter i{display:block;height:100%;width:0;border-radius:99px;background:var(--grad);transition:width 1.2s cubic-bezier(.2,.8,.2,1)}
+.lvl{font-size:11px;color:var(--muted);margin-top:8px;font-weight:600}
+.gap{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;position:relative}
+.gap .st{text-align:center;padding:16px 6px;border-radius:16px;background:var(--surface);border:1px solid var(--line)}
+.gap .st b{display:block;font-size:26px;font-weight:850;font-variant-numeric:tabular-nums}
+.gap .st small{color:var(--muted);font-size:11px;font-weight:600}
+.insight{margin-top:16px;padding:18px 20px;border-radius:16px;line-height:1.65;font-size:14px;background:linear-gradient(135deg,rgba(110,168,255,.12),rgba(167,139,250,.12));border:1px solid var(--line)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.swot{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sw{padding:16px;border-radius:16px;background:var(--surface);border:1px solid var(--line);border-top-width:3px;min-height:140px}
+.sw h3{margin:0 0 10px;font-size:13px;letter-spacing:.04em}
+.sw ul{margin:0;padding-left:18px}.sw li{font-size:13px;line-height:1.45;margin:6px 0}
+.sw.s{border-top-color:var(--good)}.sw.w{border-top-color:var(--bad)}.sw.o{border-top-color:var(--accent)}.sw.t{border-top-color:var(--warn)}
+.recrow{display:grid;grid-template-columns:40px 1fr;gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
+.recrow:last-child{border-bottom:0}
+.recrow .n{width:36px;height:36px;border-radius:12px;background:var(--grad);display:grid;place-items:center;font-weight:850;color:#fff}
+.opp{margin-bottom:12px;padding:14px 16px;border-radius:16px;background:var(--surface);border:1px solid var(--line)}
+.opp .t{display:flex;justify-content:space-between;font-weight:700;font-size:14px;margin-bottom:9px}
+.opp .t span:last-child{font-variant-numeric:tabular-nums}
+.opp p{margin:8px 0 0;font-size:12px;color:var(--muted)}
+.next{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.nx{padding:18px;border-radius:16px;background:var(--surface);border:1px solid var(--line)}
+.nx b{display:inline-block;margin-bottom:6px;font-size:13px;padding:3px 10px;border-radius:99px;background:var(--grad);color:#fff}
+.nx p{margin:6px 0 0;color:var(--muted);font-size:14px;line-height:1.55}
+/* Drawer */
+.drawer{position:fixed;inset:0;z-index:60;display:flex;justify-content:flex-end;background:rgba(3,6,18,.55);backdrop-filter:blur(6px);animation:fade .25s both}
+.dpanel{width:min(460px,94vw);height:100%;padding:26px;overflow:auto;background:var(--bg2);border-left:1px solid var(--line);animation:slide .35s cubic-bezier(.2,.8,.2,1) both;box-shadow:-30px 0 80px rgba(0,0,0,.4)}
+@keyframes slide{from{transform:translateX(100%)}to{transform:none}}@keyframes fade{from{opacity:0}}
+.dhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.dhead h2{margin:0}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:11px 18px;border-radius:14px;background:var(--text);color:var(--bg);font-size:13px;font-weight:700;z-index:100;animation:rise .3s both;box-shadow:var(--shadow)}
+.footer{margin-top:24px;text-align:center;font-size:11px;color:var(--muted);line-height:1.6}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.side{display:none}.rhero{grid-template-columns:1fr}.two,.next{grid-template-columns:1fr}.modes{grid-template-columns:1fr}.dgrid{grid-template-columns:1fr 1fr}.gap{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:560px){.dgrid{grid-template-columns:1fr}.swot{grid-template-columns:1fr}.scale{gap:5px}.sbtn{padding:16px 2px 10px;border-radius:14px}.sbtn span{font-size:9.5px}.chip .lb{display:none}.hint{display:none}.gap{grid-template-columns:repeat(2,1fr)}}
+@media print{.aurora,.top,.actions,.footer,.hint{display:none!important}body{background:#fff;color:#000}.glass{box-shadow:none;backdrop-filter:none;background:#fff;border-color:#ddd}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="aurora"><i></i><i></i><i></i></div>
+<header class="top">
+  <div class="brand"><div class="logo">K</div><div><b>KONDO POTENTIAL</b><small>ASSESSOR</small></div></div>
+  <div class="tools">
+    <button class="chip" id="themeBtn" title="Changer de thème">🌓 <span class="lb">Thème</span></button>
+    <button class="chip" id="saveBtn">💾 <span class="lb">Sauvegarder</span></button>
+    <button class="chip" id="resetBtn">↺ <span class="lb">Réinitialiser</span></button>
+  </div>
+</header>
+<main class="wrap">
+  <div id="app"></div>
+  <div class="footer">KONDO Potential Assessor — outil d'auto-évaluation. Les scores sont des indices internes expérimentaux, ni un diagnostic psychologique ni une mesure scientifique validée.</div>
+</main>
+<div id="drawer" class="drawer hidden" onclick="if(event.target===this)closeDrawer()"><div class="dpanel"><div class="dhead"><h2 id="drawerTitle">Détail</h2><button class="chip" onclick="closeDrawer()">✕</button></div><div id="drawerBody"></div></div></div>
+<div id="toast" class="toast hidden"></div>
+<script>
+const KEY="kondo_potential_v2", THEME="kondo_potential_theme";
+const dimensions=[
+ {id:"values",name:"Valeurs",ico:"🧭",desc:"Ce qui oriente réellement vos choix."},
+ {id:"skills",name:"Compétences",ico:"🛠️",desc:"Ce que vous savez effectivement faire."},
+ {id:"abilities",name:"Habiletés",ico:"⚡",desc:"Vos aptitudes mobilisables et transférables."},
+ {id:"learning",name:"Apprentissage",ico:"📚",desc:"Votre capacité à apprendre et progresser."},
+ {id:"discipline",name:"Discipline",ico:"🎯",desc:"Votre capacité à transformer une intention en action régulière."},
+ {id:"adaptability",name:"Adaptabilité",ico:"🌀",desc:"Votre capacité à évoluer avec les situations."},
+ {id:"resilience",name:"Résilience",ico:"🛡️",desc:"Votre capacité à absorber les difficultés et repartir."},
+ {id:"leadership",name:"Leadership",ico:"👑",desc:"Votre capacité à influencer, décider et mobiliser."},
+ {id:"conversion",name:"Conversion",ico:"💎",desc:"Votre capacité à transformer vos capacités en résultats utiles."}
+];
+const AG=["Pas du tout","Plutôt non","Parfois","Plutôt oui","Tout à fait"];
+const questions=[
+{id:"v1",dim:"values",type:"single",q:"Quand deux priorités importantes s'opposent, lequel compte le plus pour vous ?",opts:["Liberté et autonomie","Sécurité et stabilité","Réussite et progression","Relations et loyauté","Influence et impact"]},
+{id:"v2",dim:"values",type:"single",q:"Si un choix rentable entre en conflit avec votre intégrité, que faites-vous le plus probablement ?",opts:["Je refuse","Je cherche une troisième solution","Je négocie les conditions","J'accepte si le risque est faible","La rentabilité passe d'abord"],key:[5,4,3,2,1]},
+{id:"v3",dim:"values",type:"scale",q:"J'accepte de renoncer à un avantage immédiat pour rester fidèle à mes principes.",labels:["Pas du tout","Rarement","Parfois","Souvent","Tout à fait"]},
+{id:"s1",dim:"skills",type:"scale",q:"Je peux expliquer clairement à quelqu'un comment réaliser une tâche que je maîtrise.",labels:["Très faible","Faible","Moyen","Fort","Très fort"]},
+{id:"s2",dim:"skills",type:"scale",q:"Je sais résoudre un problème pratique même lorsque les informations disponibles sont incomplètes.",labels:["Très faible","Faible","Moyen","Fort","Très fort"]},
+{id:"s3",dim:"skills",type:"scale",q:"Je transforme facilement une connaissance théorique en application concrète.",labels:["Très faible","Faible","Moyen","Fort","Très fort"]},
+{id:"a1",dim:"abilities",type:"scale",q:"Face à un problème complexe, j'arrive naturellement à identifier les éléments essentiels.",labels:["Jamais","Rarement","Parfois","Souvent","Presque toujours"]},
+{id:"a2",dim:"abilities",type:"scale",q:"Je remarque des relations ou des possibilités que d'autres ne voient pas immédiatement.",labels:["Jamais","Rarement","Parfois","Souvent","Presque toujours"]},
+{id:"a3",dim:"abilities",type:"scale",q:"Je peux travailler de manière autonome sans avoir besoin d'être constamment guidé.",labels:["Très difficile","Difficile","Variable","Facile","Très facile"]},
+{id:"l1",dim:"learning",type:"scale",q:"Lorsque je rencontre un sujet que je ne connais pas, je peux progresser rapidement.",labels:["Très faible","Faible","Moyen","Fort","Très fort"]},
+{id:"l2",dim:"learning",type:"scale",q:"Je cherche spontanément à comprendre pourquoi quelque chose fonctionne plutôt qu'à simplement mémoriser.",labels:["Jamais","Rarement","Parfois","Souvent","Toujours"]},
+{id:"d1",dim:"discipline",type:"scale",q:"Je termine généralement ce que j'ai commencé.",labels:["Jamais","Rarement","Parfois","Souvent","Presque toujours"]},
+{id:"d2",dim:"discipline",type:"scale",q:"Je peux maintenir un effort même lorsque la motivation initiale disparaît.",labels:["Très difficile","Difficile","Variable","Facile","Très facile"]},
+{id:"ad1",dim:"adaptability",type:"scale",q:"Quand les circonstances changent, je peux rapidement modifier mon approche.",labels:["Très difficile","Difficile","Variable","Facile","Très facile"]},
+{id:"ad2",dim:"adaptability",type:"scale",q:"Je considère les erreurs et les changements comme des sources d'information.",labels:["Jamais","Rarement","Parfois","Souvent","Toujours"]},
+{id:"r1",dim:"resilience",type:"scale",q:"Après un échec important, je retrouve suffisamment d'énergie pour recommencer.",labels:["Très difficile","Difficile","Variable","Facile","Très facile"]},
+{id:"r2",dim:"resilience",type:"scale",q:"Sous pression, je peux conserver une qualité de décision acceptable.",labels:["Jamais","Rarement","Parfois","Souvent","Presque toujours"]},
+{id:"ld1",dim:"leadership",type:"scale",q:"Lorsque personne ne prend la responsabilité d'un problème, je suis capable de prendre l'initiative.",labels:["Jamais","Rarement","Parfois","Souvent","Presque toujours"]},
+{id:"ld2",dim:"leadership",type:"scale",q:"Je peux convaincre sans imposer ma position.",labels:["Très faible","Faible","Moyen","Fort","Très fort"]},
+{id:"c1",dim:"conversion",type:"scale",q:"Je transforme régulièrement mes connaissances ou compétences en résultats concrets.",labels:["Jamais","Rarement","Parfois","Souvent","Presque toujours"]},
+{id:"c2",dim:"conversion",type:"scale",q:"Je sais identifier comment une compétence peut être utile, vendue ou valorisée.",labels:["Très faible","Faible","Moyen","Fort","Très fort"]},
+{id:"c3",dim:"conversion",type:"scale",q:"Je passe rapidement de l'idée à une première action concrète.",labels:["Très difficile","Difficile","Variable","Facile","Très facile"]},
+{id:"c4",dim:"conversion",type:"scale",q:"Je sais me concentrer sur quelques priorités plutôt que de me disperser.",labels:["Jamais","Rarement","Parfois","Souvent","Presque toujours"]},
+/* Items inversés (contrôle de cohérence) */
+{id:"d1r",dim:"discipline",type:"scale",rev:true,q:"Je commence souvent plusieurs choses sans en terminer certaines.",labels:AG},
+{id:"d2r",dim:"discipline",type:"scale",rev:true,q:"Lorsque l'enthousiasme initial disparaît, j'abandonne facilement.",labels:AG},
+{id:"l1r",dim:"learning",type:"scale",rev:true,q:"Face à un sujet nouveau, je mets beaucoup de temps à comprendre.",labels:AG},
+{id:"l2r",dim:"learning",type:"scale",rev:true,q:"Je préfère retenir des méthodes toutes faites plutôt que comprendre leur logique.",labels:AG},
+{id:"ad1r",dim:"adaptability",type:"scale",rev:true,q:"Quand mes plans changent, je reste bloqué un long moment avant de repartir.",labels:AG},
+{id:"r1r",dim:"resilience",type:"scale",rev:true,q:"Un échec important me décourage durablement.",labels:AG},
+{id:"ld1r",dim:"leadership",type:"scale",rev:true,q:"J'attends généralement que quelqu'un d'autre prenne les décisions difficiles.",labels:AG},
+{id:"c3r",dim:"conversion",type:"scale",rev:true,q:"J'ai souvent de bonnes idées que je ne mets jamais en œuvre.",labels:AG},
+{id:"c4r",dim:"conversion",type:"scale",rev:true,q:"Je me disperse entre trop de projets à la fois.",labels:AG},
+{id:"s2r",dim:"skills",type:"scale",rev:true,q:"Sans informations complètes, je suis incapable d'avancer.",labels:AG},
+{id:"a3r",dim:"abilities",type:"scale",rev:true,q:"J'ai besoin qu'on me guide régulièrement pour avancer.",labels:AG},
+{id:"v3r",dim:"values",type:"scale",rev:true,q:"Je fais parfois des compromis sur mes principes quand l'enjeu est important.",labels:AG},
+/* Mises en situation (réponse la plus « évidente » volontairement non triviale) */
+{id:"sit1",dim:"discipline",type:"single",w:1.5,q:"Un projet important est à rendre dans 10 jours, quand une opportunité nouvelle et séduisante apparaît. Que faites-vous ?",opts:["J'abandonne le projet pour saisir l'opportunité","Je mène les deux de front, quitte à finir dans l'urgence","Je note l'opportunité, termine le projet, puis je l'étudie","Je demande un délai sur le projet pour traiter l'opportunité","J'attends de voir comment les choses évoluent"],key:[1,2,5,3,2]},
+{id:"sit2",dim:"conversion",type:"single",w:1.5,q:"Vous maîtrisez une compétence que personne autour de vous ne valorise financièrement. Vous…",opts:["Attendez qu'on reconnaisse votre valeur","Testez une offre simple auprès de 3 personnes cette semaine","Vous formez davantage avant de proposer quoi que ce soit","La partagez gratuitement pour vous faire connaître","En parlez autour de vous sans plan précis"],key:[1,5,2,3,2]},
+{id:"sit3",dim:"resilience",type:"single",w:1.5,q:"Une personne importante critique durement un travail dont vous étiez fier. Votre réaction la plus probable ?",opts:["Je me défends et justifie mon travail","Je laisse passer quelques jours puis j'extrais ce qui est utile","Je doute de moi et je repousse mes projets","Je rejette la critique comme injuste","Je corrige tout immédiatement, sans analyser"],key:[2,5,1,1,3]},
+{id:"sit4",dim:"adaptability",type:"single",w:1.5,q:"Votre environnement change brutalement et votre méthode habituelle ne fonctionne plus. Vous…",opts:["Persistez : ça finira par repasser","Testez rapidement 2 ou 3 approches alternatives à petite échelle","Attendez des instructions ou un signal clair","Changez complètement de domaine","Cherchez d'abord ce qui a changé, puis adaptez votre méthode"],key:[1,5,2,2,4]},
+{id:"sit5",dim:"leadership",type:"single",w:1.5,q:"Une équipe est bloquée par un désaccord et personne ne tranche. Vous…",opts:["Laissez le temps faire","Imposez votre solution","Reformulez les positions, proposez un critère de décision et faites trancher","Vous retirez pour éviter le conflit","Faites remonter au supérieur sans proposition"],key:[1,2,5,1,2]},
+{id:"sit6",dim:"learning",type:"single",w:1.5,q:"Vous devez maîtriser un sujet nouveau en deux semaines. Vous…",opts:["Lisez tout avant de pratiquer","Pratiquez tôt sur un cas réel et ajustez en lisant","Cherchez quelqu'un qui le fera à votre place","Regardez quelques vidéos","Suivez un cours structuré, puis pratiquez"],key:[2,5,1,2,4]},
+/* Comportements passés (plus difficiles à embellir) */
+{id:"b1",dim:"discipline",type:"scale",beh:true,w:1.5,q:"Au cours des 6 derniers mois, combien de projets importants avez-vous menés jusqu'au bout ?",labels:["Aucun","Un seul","Deux","Trois à quatre","Cinq ou plus"]},
+{id:"b2",dim:"conversion",type:"scale",beh:true,w:1.5,q:"Au cours des 6 derniers mois, combien de fois avez-vous transformé une idée en action concrète (test, offre, prototype) ?",labels:["Jamais","1 fois","2 à 3 fois","4 à 6 fois","Plus de 6 fois"]},
+{id:"b3",dim:"learning",type:"scale",beh:true,w:1.5,q:"Au cours des 6 derniers mois, avez-vous appris et appliqué une nouvelle compétence ?",labels:["Non","Commencé sans appliquer","Une, partiellement","Une, appliquée","Plusieurs, appliquées"]},
+{id:"b4",dim:"resilience",type:"scale",beh:true,w:1.5,q:"Après votre dernier revers important, combien de temps avant de repartir concrètement ?",labels:["Pas encore / +6 mois","3 à 6 mois","1 à 3 mois","Quelques semaines","Quelques jours"]},
+{id:"b5",dim:"leadership",type:"scale",beh:true,w:1.5,q:"Au cours des 6 derniers mois, combien de fois avez-vous pris l'initiative d'une décision ou d'une action collective ?",labels:["Jamais","1 fois","2 à 3 fois","4 à 6 fois","Plus de 6 fois"]},
+/* Échelle de désirabilité sociale (non comptée dans les dimensions) */
+{id:"sd1",dim:"valid",type:"scale",q:"Je ne perds jamais patience, quelle que soit la situation.",labels:AG},
+{id:"sd2",dim:"valid",type:"scale",q:"Je n'ai jamais remis à plus tard une tâche importante.",labels:AG},
+{id:"sd3",dim:"valid",type:"scale",q:"Je ne me suis jamais trompé dans un jugement important.",labels:AG},
+{id:"sd4",dim:"valid",type:"scale",q:"Je tiens toujours mes promesses, sans la moindre exception.",labels:AG}
+];
+const PAIRS=[["d1","d1r"],["d2","d2r"],["l1","l1r"],["l2","l2r"],["ad1","ad1r"],["r1","r1r"],["ld1","ld1r"],["c3","c3r"],["c4","c4r"],["s2","s2r"],["a3","a3r"],["v3","v3r"]];
+
+function partnerOf(id){const p=PAIRS.find(x=>x.includes(id));return p?(p[0]===id?p[1]:p[0]):null}
+function makeOrder(){
+  const idx=questions.map((_,i)=>i);
+  const adj=()=>{for(let k=1;k<idx.length;k++){if(partnerOf(questions[idx[k-1]].id)===questions[idx[k]].id)return true}return false};
+  let t=0;do{for(let i=idx.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[idx[i],idx[j]]=[idx[j],idx[i]]}}while(adj()&&++t<80);
+  return idx;
+}
+function fresh(profile="general",screen="home"){return{screen,i:0,answers:{},profile,result:null,order:makeOrder(),confirmed:{},times:{}}}
+let state=fresh();
+let advanceTimer=null,shownAt=0;
+function cq(){return questions[state.order[state.i]]}
+function pairGapFor(id){const p=PAIRS.find(x=>x.includes(id));if(!p)return null;const A=state.answers;if(A[p[0]]==null||A[p[1]]==null)return null;return Math.abs(A[p[0]]-(6-A[p[1]]))}
+function confirmPair(id){state.confirmed[id]=true;const p=partnerOf(id);if(p)state.confirmed[p]=true;next()}
+function gotoQ(id){clearTimeout(advanceTimer);const ix=questions.findIndex(q=>q.id===id);state.i=state.order.indexOf(ix);render()}
+
+/* ---------- Utilitaires ---------- */
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));toast("Progression sauvegardée ✓")}catch(e){toast("Sauvegarde indisponible")}}
+function load(){try{const x=JSON.parse(localStorage.getItem(KEY));if(x&&x.answers){state=x;if(!state.order||state.order.length!==questions.length)state.order=makeOrder();state.confirmed=state.confirmed||{};state.times=state.times||{}}}catch(e){}}
+function toast(s){const t=document.getElementById("toast");t.textContent=s;t.classList.remove("hidden");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.add("hidden"),1900)}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function answeredCount(){return Object.keys(state.answers).length}
+function dimOf(id){return dimensions.find(d=>d.id===id)||{id:"valid",name:"Profil général",ico:"🧩",desc:"Votre façon de vous percevoir au quotidien."}}
+function level(n){return n>=80?"Très élevé":n>=70?"Élevé":n>=55?"Modéré":"À développer"}
+function applyTheme(t){document.documentElement.setAttribute("data-theme",t);try{localStorage.setItem(THEME,t)}catch(e){}}
+function toggleTheme(){applyTheme(document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark");if(state.screen==="results")render()}
+function countUp(el,to,dur=1300){const t0=performance.now();(function f(t){const p=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-p,3);el.textContent=Math.round(to*e);if(p<1)requestAnimationFrame(f)})(t0)}
+
+/* ---------- Rendu principal ---------- */
+function render(){
+  const root=document.getElementById("app");
+  root.innerHTML=state.screen==="home"?home():state.screen==="test"?test():results();
+  window.scrollTo({top:0,behavior:"smooth"});
+  if(state.screen==="results")animateResults();
+}
+function home(){
+  const hasProgress=answeredCount()>0&&state.screen==="home";
+  return `<section class="glass hero enter">
+  <div class="eyebrow">ÉVALUATION DU POTENTIEL</div>
+  <h1>Découvrez ce que vous avez, ce que vous <span class="gradtext">sous-estimez</span> et où créer de la valeur.</h1>
+  <p>Un parcours compact qui analyse vos valeurs, compétences, habiletés, comportements et votre capacité à transformer votre potentiel en résultats.</p>
+  <div class="pills"><span class="pill">9 dimensions</span><span class="pill">${questions.length} questions</span><span class="pill">≈ 5 minutes</span><span class="pill">100 % local · sans compte</span></div>
+  <div class="modes stagger">
+    <button class="mode" onclick="start('general')"><span class="rec">RECOMMANDÉ</span><span class="ico">🔎</span><b>Évaluation générale</b><span class="d">Le profil complet, toutes dimensions confondues.</span></button>
+    <button class="mode" onclick="start('career')"><span class="ico">🎯</span><b>Carrière</b><span class="d">Orientation et environnement professionnel.</span></button>
+    <button class="mode" onclick="start('business')"><span class="ico">💼</span><b>Business</b><span class="d">Potentiel entrepreneurial et création de valeur.</span></button>
+  </div>
+  ${hasProgress?`<div class="principle" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><span>Une évaluation en cours a été retrouvée (${answeredCount()}/${questions.length} réponses).</span><button class="btn primary" onclick="resume()">Reprendre →</button></div>`:""}
+  <div class="principle"><b>Principe KONDO</b> — Le potentiel n'est pas seulement ce que vous possédez. Il dépend aussi de votre capacité à l'utiliser, de votre environnement et de votre positionnement.</div>
+  </section>`;
+}
+function start(profile){state=fresh(profile,"test");render()}
+function resume(){state.screen="test";state.i=Math.min(state.i,questions.length-1);render()}
+
+function choicesHTML(q){
+  if(q.type==="single")return `<div class="choices">${q.opts.map((o,j)=>`<button class="choice ${state.answers[q.id]===j?"selected":""}" onclick="answer(${j})"><span class="k">${String.fromCharCode(65+j)}</span><span>${esc(o)}</span></button>`).join("")}</div>`;
+  return `<div class="scale">${q.labels.map((o,j)=>`<button class="sbtn ${state.answers[q.id]===j+1?"selected":""}" onclick="answer(${j+1})"><strong>${j+1}</strong><span>${esc(o)}</span></button>`).join("")}</div>`;
+}
+function sideHTML(){
+  return `<h3>VOTRE PARCOURS</h3><div class="steps">${dimensions.map(d=>{
+    const qs=questions.filter(q=>q.dim===d.id),n=qs.filter(q=>state.answers[q.id]!=null).length,cur=cq().dim===d.id;
+    return `<div class="stp ${cur?"current":""} ${n===qs.length?"done":""}"><div class="si">${d.ico}</div><div><b>${esc(d.name)}</b><small>${n}/${qs.length} répondue${qs.length>1?"s":""}</small></div></div>`}).join("")}</div>`;
+}
+function test(){
+  shownAt=Date.now();const q=cq(),d=dimOf(q.dim),pct=Math.round(answeredCount()/questions.length*100),last=state.i===questions.length-1;
+  return `<div class="progress enter"><div class="bar"><i id="pbar" style="width:${pct}%"></i></div><div class="steptext">${state.i+1} / ${questions.length}</div></div>
+  <div class="grid"><section class="glass enter" id="qcard">
+    <div class="qhead"><div class="dimico">${d.ico}</div><div class="eyebrow">${esc(d.name)}</div></div>
+    <h1 class="q">${esc(q.q)}</h1><p class="qdesc">${esc(d.desc)}</p>
+    <div id="choices">${choicesHTML(q)}</div><div id="notice"></div>
+    <div class="hint"><span><kbd>${q.type==="single"?"A–E":"1–5"}</kbd> répondre</span><span><kbd>←</kbd> retour</span><span><kbd>Entrée</kbd> continuer</span></div>
+    <div class="actions"><button class="btn ghost" onclick="prev()" ${state.i===0?"disabled":""}>← Retour</button><button class="btn primary" id="nextBtn" onclick="next()" ${state.answers[q.id]==null?"disabled":""}>${last?"Voir mon profil ✨":"Continuer →"}</button></div>
+  </section><aside class="glass side enter" id="side">${sideHTML()}</aside></div>`;
+}
+function answer(v){
+  const q=cq();state.answers[q.id]=v;state.times[q.id]=Math.min(60000,Date.now()-shownAt);
+  document.getElementById("choices").innerHTML=choicesHTML(q);
+  document.getElementById("nextBtn").disabled=false;
+  document.getElementById("side").innerHTML=sideHTML();
+  document.getElementById("pbar").style.width=Math.round(answeredCount()/questions.length*100)+"%";
+  clearTimeout(advanceTimer);
+  const nt=document.getElementById("notice"),pg=pairGapFor(q.id);
+  if(pg!=null&&pg>=3&&!state.confirmed[q.id]){
+    nt.innerHTML=`<div class="alert">⚠️ Cette réponse semble s'opposer à celle d'une autre question. Souhaitez-vous la confirmer, ou revoir l'autre réponse ?<div class="alert-actions"><button class="btn ghost" onclick="confirmPair('${q.id}')">Je confirme</button><button class="btn ghost" onclick="gotoQ('${partnerOf(q.id)}')">Revoir l'autre question</button></div></div>`;
+    return;
+  }
+  nt.innerHTML="";
+  if(state.i<questions.length-1)advanceTimer=setTimeout(()=>{if(state.screen==="test"&&cq().id===q.id)next()},520);
+}
+function prev(){clearTimeout(advanceTimer);if(state.i>0){state.i--;render()}}
+function next(){clearTimeout(advanceTimer);if(state.answers[questions[state.i].id]==null)return;if(state.i<questions.length-1){state.i++;render()}else{calculate();state.screen="results";render()}}
+
+/* ---------- Moteur (inchangé) ---------- */
+function itemVal(q){const v=state.answers[q.id];if(v==null)return null;if(q.type==="single")return q.key?q.key[v]:null;return q.rev?6-v:v}
+function calcDim(id){let sw=0,s=0;questions.filter(q=>q.dim===id).forEach(q=>{const v=itemVal(q);if(v==null)return;const w=q.w||1;sw+=w;s+=w*v});return sw?Math.round(s/sw/5*100):0}
+/* KRVI — KONDO Response Validity Index */
+function validity(){
+  const A=state.answers,mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
+  let n=0,flag=0;
+  PAIRS.forEach(([d,r])=>{if(A[d]==null||A[r]==null)return;n++;if(Math.abs(A[d]-(6-A[r]))>=3)flag+=state.confirmed[d]?.5:1});
+  const incons=n?flag/n:0;
+  const sd=questions.filter(q=>q.dim==="valid").map(q=>A[q.id]).filter(v=>v!=null);
+  const sdMean=mean(sd)??3,sdRisk=Math.max(0,Math.min(1,(sdMean-3)/1.8));
+  const raw=questions.filter(q=>q.type==="scale").map(q=>A[q.id]).filter(v=>v!=null);
+  const eri=raw.length?raw.filter(v=>v===1||v===5).length/raw.length:0,acq=mean(raw)??3;
+  let run=1,best=1,prev=null;
+  state.order.forEach(ix=>{const q=questions[ix];if(q.type!=="scale"){prev=null;run=1;return}const v=A[q.id];if(v==null)return;if(v===prev){run++;best=Math.max(best,run)}else{run=1;prev=v}});
+  const ts=Object.values(state.times).sort((a,b)=>a-b),med=ts.length?ts[Math.floor(ts.length/2)]/1000:5;
+  const selfV=[],behV=[];
+  questions.forEach(q=>{if(q.dim==="valid")return;const v=itemVal(q);if(v==null)return;(q.type==="single"||q.beh?behV:selfV).push(v)});
+  const selfM=mean(selfV),behM=mean(behV),gapSB=selfM!=null&&behM!=null?Math.round((selfM-behM)/5*100):0;
+  const pen={cons:35*Math.min(1,incons*1.6),sd:25*sdRisk,eri:eri>.65?Math.min(10,(eri-.65)*40):0,acq:acq>4.2?Math.min(10,(acq-4.2)*20):0,run:best>=6?Math.min(15,(best-5)*3):0,speed:med<1.2?15:med<2?8:0,sb:gapSB>20?Math.min(10,(gapSB-20)*.5):0};
+  const krvi=Math.round(Math.max(0,Math.min(100,100-Object.values(pen).reduce((a,b)=>a+b,0))));
+  return{krvi,n,flag,incons,sdMean,sdRisk,eri,acq,run:best,med,gapSB,pen,selfM,behM};
+}
+function lambdaOf(v){return Math.min(.5,Math.max(0,(100-v.krvi)/100*.6)+Math.max(0,Math.min(.15,(v.gapSB-10)/100)))}
+function calculate(){
+  const rawScores={};dimensions.forEach(d=>rawScores[d.id]=calcDim(d.id));
+  const validityR=validity(),lam=lambdaOf(validityR),anchor=validityR.behM!=null?validityR.behM/5*100:50;
+  /* correction : on ne ramène vers les comportements observés que les scores déclarés plus flatteurs */
+  const scores={};dimensions.forEach(d=>{const x=rawScores[d.id];scores[d.id]=x>anchor?Math.round(x*(1-lam)+anchor*lam):x});
+  const potential=Math.round(scores.skills*.24+scores.abilities*.24+scores.learning*.14+scores.adaptability*.1+scores.resilience*.08+scores.leadership*.08+scores.discipline*.07+scores.values*.05);
+  const conversion=scores.conversion,latent=Math.max(0,potential-conversion);
+  const rs=rawScores,rawPotential=Math.round(rs.skills*.24+rs.abilities*.24+rs.learning*.14+rs.adaptability*.1+rs.resilience*.08+rs.leadership*.08+rs.discipline*.07+rs.values*.05);
+  const confidence=validityR.krvi;
+  const margin=Math.round(3+(100-validityR.krvi)*.14+(questions.length-answeredCount())*.3);
+  state.result={scores,rawScores,potential,rawPotential,conversion,latent,confidence,validity:validityR,lambda:lam,margin,lo:Math.max(0,potential-margin),hi:Math.min(100,potential+margin),date:new Date().toISOString()};
+}
+function calculateLists(r){
+  const s=r.scores,names=Object.fromEntries(dimensions.map(d=>[d.id,d.name]));
+  return{strengths:Object.entries(s).filter(([k,v])=>v>=75).sort((a,b)=>b[1]-a[1]).slice(0,4).map(x=>names[x[0]]),
+         weaknesses:Object.entries(s).filter(([k,v])=>v<60).sort((a,b)=>a[1]-b[1]).slice(0,4).map(x=>names[x[0]])}
+}
+function opportunities(r){
+  const s=r.scores;
+  return[
+  {name:"Emploi spécialisé",score:Math.round((s.skills+s.learning+s.discipline)/3),why:"Compétence + apprentissage + constance"},
+  {name:"Consulting",score:Math.round((s.skills+s.abilities+s.conversion)/3),why:"Expertise + résolution de problèmes + conversion"},
+  {name:"Entrepreneuriat",score:Math.round((s.abilities+s.adaptability+s.conversion+s.leadership)/4),why:"Autonomie + adaptation + création de valeur + influence"},
+  {name:"Management",score:Math.round((s.leadership+s.discipline+s.adaptability)/3),why:"Influence + exécution + adaptation"},
+  {name:"Recherche / expertise",score:Math.round((s.abilities+s.learning+s.skills)/3),why:"Analyse + apprentissage + maîtrise technique"}
+  ].sort((a,b)=>b.score-a.score).slice(0,4);
+}
+
+/* ---------- Radar SVG ---------- */
+function radarSVG(s){
+  const cx=200,cy=200,R=140,n=dimensions.length;
+  const pt=(i,v)=>{const a=-Math.PI/2+i*2*Math.PI/n,r=R*v/100;return[cx+r*Math.cos(a),cy+r*Math.sin(a)]};
+  const rings=[25,50,75,100].map(v=>`<polygon points="${dimensions.map((d,i)=>pt(i,v).join(",")).join(" ")}" fill="none" stroke="var(--line)" stroke-width="1"/>`).join("");
+  const axes=dimensions.map((d,i)=>{const[x,y]=pt(i,100);return`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--line)"/>`}).join("");
+  const poly=dimensions.map((d,i)=>pt(i,s[d.id]).join(",")).join(" ");
+  const dots=dimensions.map((d,i)=>{const[x,y]=pt(i,s[d.id]);return`<circle cx="${x}" cy="${y}" r="4.5" fill="#fff" stroke="var(--accent2)" stroke-width="2.5"/>`}).join("");
+  const labels=dimensions.map((d,i)=>{const[x,y]=pt(i,122);const a=-Math.PI/2+i*2*Math.PI/n;const anchor=Math.abs(Math.cos(a))<.2?"middle":Math.cos(a)>0?"start":"end";
+    return`<text x="${x}" y="${y}" text-anchor="${anchor}" dominant-baseline="middle" font-size="11.5" font-weight="700" fill="var(--muted)">${d.name}</text>`}).join("");
+  return`<svg viewBox="-30 -10 460 420" role="img" aria-label="Radar des 9 dimensions"><defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6ea8ff" stop-opacity=".55"/><stop offset="1" stop-color="#a78bfa" stop-opacity=".35"/></linearGradient></defs>
+  ${rings}${axes}<g class="radar-poly"><polygon points="${poly}" fill="url(#rg)" stroke="var(--accent2)" stroke-width="2.5" stroke-linejoin="round"/>${dots}</g>${labels}</svg>`;
+}
+function ringSVG(p){
+  const r=96,c=2*Math.PI*r;
+  return`<svg viewBox="0 0 220 220"><defs><linearGradient id="ringg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6ea8ff"/><stop offset=".55" stop-color="#a78bfa"/><stop offset="1" stop-color="#f58bd3"/></linearGradient></defs>
+  <circle cx="110" cy="110" r="${r}" fill="none" stroke="var(--ring-track)" stroke-width="16"/>
+  <circle id="ringArc" cx="110" cy="110" r="${r}" fill="none" stroke="url(#ringg)" stroke-width="16" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c}" data-c="${c}" data-p="${p}" style="transition:stroke-dashoffset 1.6s cubic-bezier(.2,.8,.2,1);filter:drop-shadow(0 0 10px rgba(167,139,250,.6))"/></svg>`;
+}
+
+/* ---------- Résultats ---------- */
+function results(){
+  if(!state.result)calculate();
+  const r=state.result,s=r.scores,l=calculateLists(r);
+  const profileName=r.potential>=82?"Bâtisseur à fort potentiel":r.potential>=70?"Potentiel en développement":r.potential>=55?"Potentiel à structurer":"Potentiel à reconstruire";
+  const insight=r.latent>=25?"Votre potentiel estimé est nettement supérieur à votre capacité actuelle de conversion. Le principal enjeu semble être de transformer davantage vos capacités en actions et résultats.":
+    r.conversion>=75?"Votre capacité de conversion est solide. Le prochain levier est probablement d'augmenter la qualité ou l'ampleur des opportunités auxquelles vous appliquez vos compétences.":
+    "Votre potentiel et sa conversion sont relativement proches. Le levier prioritaire est d'augmenter progressivement vos compétences et votre expérience.";
+  const recs=[];
+  if(s.conversion<65)recs.push(["Améliorer la conversion","Choisissez une compétence forte et transformez-la en un projet concret, mesurable et limité dans le temps."]);
+  if(s.discipline<65)recs.push(["Renforcer la discipline","Réduisez le nombre de priorités simultanées et définissez une action quotidienne vérifiable."]);
+  if(s.learning>=75)recs.push(["Capitaliser sur l'apprentissage","Utilisez votre capacité d'apprentissage pour combler une faiblesse directement liée à votre objectif."]);
+  if(s.adaptability>=75)recs.push(["Exploiter l'adaptabilité","Recherchez des environnements où le changement et la résolution de problèmes sont valorisés."]);
+  if(s.skills>=75)recs.push(["Monétiser une compétence","Identifiez une compétence déjà forte et cherchez une application professionnelle, de consulting ou entrepreneuriale."]);
+  if(!recs.length)recs.push(["Choisir une priorité","Sélectionnez une compétence importante et construisez une expérimentation concrète sur 30 jours."]);
+  const strengths=l.strengths.length?l.strengths:["Aucune force dominante détectée avec les réponses actuelles."];
+  const weaknesses=l.weaknesses.length?l.weaknesses:["Aucune faiblesse critique détectée avec les réponses actuelles."];
+  const opps=(s.skills>=70?["Expertise spécialisée"]:[]).concat(s.learning>=70?["Formation / montée en compétence"]:[],s.conversion>=65?["Consulting ou activité indépendante"]:["Projet pilote pour créer de l'expérience"]).slice(0,4);
+  const threats=(r.latent>=20?["Potentiel sous-utilisé"]:[]).concat(s.discipline<60?["Dispersion ou manque de constance"]:[],s.skills<60?["Compétences à actualiser"]:[],["Environnement incompatible avec vos forces"]).slice(0,4);
+  const top3=Object.entries(s).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>dimOf(x[0]));
+  return`<div class="results stagger">
+  <section class="glass"><div class="rhero">
+    <div>
+      <div class="eyebrow">VOTRE PROFIL</div>
+      <h1 class="rtitle gradtext">${profileName}</h1>
+      <p class="muted" style="line-height:1.65;margin:0">Potentiel global <b style="color:var(--text)">${level(r.potential)}</b>. Vos trois dimensions les plus fortes : ${top3.map(d=>`<b style="color:var(--text)">${d.ico} ${d.name}</b>`).join(", ")}.</p>
+      <div class="badges"><span class="badge exp">KPS expérimental corrigé</span><span class="badge">Fiabilité KRVI : ${r.confidence}/100</span><span class="badge">Intervalle : ${r.lo}–${r.hi}</span></div>
+      <button class="btn ghost" onclick="openDrawer('Comment le score est-il calculé ?','<p style=&quot;line-height:1.7&quot;>Le score global (KPS expérimental) combine les neuf dimensions avec des pondérations provisoires, non encore calibrées sur des données. Le résultat est corrigé à la baisse lorsque les réponses semblent flatteuses ou contradictoires (indice KRVI) et rapproché de vos comportements déclarés. Il sert à comparer les dimensions d’un même profil et à suivre son évolution. Ce n’est ni un diagnostic psychologique, ni une mesure universelle de la valeur d’une personne.</p>')">Pourquoi ce score ?</button>
+    </div>
+    <div class="herotop" style="justify-content:center">
+      <div class="ringwrap">${ringSVG(r.potential)}<div class="num"><div><b id="kps">0</b><small>KPS / 100</small></div></div></div>
+    </div>
+  </div></section>
+
+  ${reliabilityHTML(r)}
+
+  <section class="glass"><div class="sec"><h2>Radar des 9 dimensions</h2><span class="tag">vue d'ensemble</span></div><div class="radarbox">${radarSVG(s)}</div></section>
+
+  <section class="glass"><div class="sec"><h2>Tableau de bord</h2><span class="tag">touchez une carte pour le détail</span></div>
+  <div class="dgrid">${dimensions.map(d=>`<button class="dcard" onclick="openDimension('${d.id}')"><div class="dtop"><div class="dimico">${d.ico}</div><b>${esc(d.name)}</b><em>${s[d.id]}</em></div><div class="meter"><i data-w="${s[d.id]}"></i></div><div class="lvl">${level(s[d.id])}</div></button>`).join("")}</div></section>
+
+  <section class="glass"><div class="sec"><h2>Potentiel sous-exploité</h2><span class="tag">${r.latent>=25?"ÉLEVÉ":r.latent>=12?"MODÉRÉ":"FAIBLE"}</span></div>
+  <div class="gap">${[["Potentiel",r.potential],["Compétences",s.skills],["Action",Math.round((s.discipline+s.adaptability)/2)],["Résultat",Math.round((s.skills+s.conversion)/2)],["Valeur",r.conversion]].map(x=>`<div class="st"><b>${x[1]}</b><small>${x[0]}</small></div>`).join("")}</div>
+  <div class="insight"><b>${r.latent} points d'écart</b><br>${insight}</div></section>
+
+  <div class="two">
+    <section class="glass"><div class="sec"><h2>SWOT</h2><span class="tag">automatique</span></div><div class="swot">
+      <div class="sw s"><h3>🟢 FORCES</h3><ul>${strengths.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
+      <div class="sw w"><h3>🔴 FAIBLESSES</h3><ul>${weaknesses.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
+      <div class="sw o"><h3>🔵 OPPORTUNITÉS</h3><ul>${opps.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
+      <div class="sw t"><h3>🟠 MENACES</h3><ul>${threats.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div></div></section>
+    <section class="glass"><div class="sec"><h2>Conseils prioritaires</h2></div>${recs.slice(0,4).map((x,i)=>`<div class="recrow"><div class="n">${i+1}</div><div><b>${esc(x[0])}</b><div class="muted" style="font-size:13px;margin-top:4px;line-height:1.5">${esc(x[1])}</div></div></div>`).join("")}</section>
+  </div>
+
+  <section class="glass"><div class="sec"><h2>Où créer de la valeur ?</h2><span class="tag">compatibilité indicative</span></div>${opportunities(r).map(x=>`<div class="opp"><div class="t"><span>${esc(x.name)}</span><span>${x.score}%</span></div><div class="meter"><i data-w="${x.score}"></i></div><p>${esc(x.why)}</p></div>`).join("")}</section>
+
+  <section class="glass"><div class="sec"><h2>Prochaines étapes</h2></div>
+  <div class="next"><div class="nx"><b>30 jours</b><p>Choisir une seule compétence prioritaire et produire une première preuve concrète de sa valeur.</p></div><div class="nx"><b>90 jours</b><p>Transformer cette preuve en expérience, projet, offre ou résultat mesurable.</p></div></div>
+  <div class="actions"><button class="btn ghost" onclick="window.print()">🖨️ Imprimer / PDF</button><button class="btn primary" onclick="start(state.profile)">Refaire le test</button></div></section>
+  </div>`;
+}
+function animateResults(){
+  const r=state.result;
+  countUp(document.getElementById("kps"),r.potential);
+  requestAnimationFrame(()=>setTimeout(()=>{
+    const arc=document.getElementById("ringArc");if(arc){const c=+arc.dataset.c;arc.style.strokeDashoffset=c*(1-r.potential/100)}
+    document.querySelectorAll(".meter i[data-w]").forEach((el,i)=>setTimeout(()=>el.style.width=el.dataset.w+"%",i*60));
+  },120));
+}
+function openDimension(id){
+  const d=dimOf(id),s=state.result.scores[id];
+  openDrawer(d.ico+" "+d.name,`<p class="muted" style="line-height:1.6">${esc(d.desc)}</p><div style="text-align:center;margin:26px 0"><div style="font-size:72px;font-weight:900" class="gradtext">${s}</div><div class="tag" style="display:inline-block">${level(s)}</div></div><div class="meter"><i style="width:${s}%"></i></div><p class="muted" style="line-height:1.7;margin-top:22px">Ce score est construit à partir des réponses associées à cette dimension. Il sert surtout à comparer vos propres dimensions entre elles et à suivre leur évolution.</p>`);
+}
+function openDrawer(t,b){document.getElementById("drawerTitle").textContent=t;document.getElementById("drawerBody").innerHTML=b;document.getElementById("drawer").classList.remove("hidden")}
+function closeDrawer(){document.getElementById("drawer").classList.add("hidden")}
+
+/* ---------- Événements ---------- */
+document.getElementById("saveBtn").onclick=save;
+document.getElementById("themeBtn").onclick=toggleTheme;
+document.getElementById("resetBtn").onclick=()=>{if(confirm("Effacer toute la progression et recommencer ?")){try{localStorage.removeItem(KEY)}catch(e){}state={screen:"home",i:0,answers:{},profile:"general",result:null};render()}};
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape")closeDrawer();
+  if(state.screen!=="test"||!document.getElementById("drawer").classList.contains("hidden"))return;
+  const q=cq();
+  if(q.type==="scale"&&/^[1-5]$/.test(e.key))answer(+e.key);
+  else if(q.type==="single"&&/^[a-eA-E]$/.test(e.key))answer(e.key.toUpperCase().charCodeAt(0)-65);
+  else if(e.key==="Enter")next();
+  else if(e.key==="ArrowLeft")prev();
+});
+try{const t=localStorage.getItem(THEME);if(t)applyTheme(t);else if(window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches)applyTheme("light")}catch(e){}
+load();
+if(state.screen==="test"&&answeredCount()>0)state.screen="home";
+render();
+</script>
+</body>
+</html>
